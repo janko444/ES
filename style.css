@@ -71,3 +71,33 @@ body{
   font-size:18px;
   font-weight:bold;
 }
+#fx{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  opacity:0.3;
+  z-index:999;
+}
+
+.rain{
+  background:url("https://i.imgur.com/MXbQ6hQ.png");
+  animation: rain 0.3s linear infinite;
+}
+
+.snow{
+  background:url("https://i.imgur.com/2yYayZk.png");
+  animation: snow 1s linear infinite;
+}
+
+@keyframes rain{
+  from{background-position:0 0;}
+  to{background-position:0 100px;}
+}
+
+@keyframes snow{
+  from{background-position:0 0;}
+  to{background-position:0 200px;}
+}
