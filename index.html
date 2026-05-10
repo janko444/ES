@@ -3,42 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Weather App</title>
+  <title>Weather Map App</title>
+
   <link rel="stylesheet" href="style.css"/>
+
+  <!-- Leaflet map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
+
 <body>
 
   <div class="container">
 
-    <div class="search-box">
-      <input type="text" placeholder="Wpisz miasto..." id="cityInput">
-      <button id="searchBtn">Szukaj</button>
-    </div>
+    <div id="map"></div>
 
     <div class="weather-box">
 
-      <h1 id="city">Warsaw</h1>
+      <h1 id="city">Kliknij na mapie</h1>
 
       <img 
         id="weatherIcon"
-        src="https://cdn-icons-png.flaticon.com/512/869/869869.png"
+        src="https://cdn-icons-png.flaticon.com/512/1163/1163661.png"
         alt="weather"
       >
 
-      <h2 id="temperature">18°C</h2>
+      <h2 id="temperature">--°C</h2>
 
-      <p id="description">Sunny</p>
+      <p id="description">Brak danych</p>
 
       <div class="details">
 
         <div class="detail">
           <span>💧 Wilgotność</span>
-          <p id="humidity">60%</p>
+          <p id="humidity">--%</p>
         </div>
 
         <div class="detail">
           <span>🌬 Wiatr</span>
-          <p id="wind">12 km/h</p>
+          <p id="wind">-- km/h</p>
         </div>
 
       </div>
