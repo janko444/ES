@@ -1,6 +1,8 @@
+
+// ================= API =================
 const apiKey = "739098adcbab3596715447d628e4e1c9";
 
-// UI
+// ================= UI =================
 const city = document.getElementById("city");
 const temperature = document.getElementById("temperature");
 const description = document.getElementById("description");
@@ -8,13 +10,20 @@ const humidity = document.getElementById("humidity");
 const wind = document.getElementById("wind");
 const weatherIcon = document.getElementById("weatherIcon");
 
+const feels = document.getElementById("feels");
+const pressure = document.getElementById("pressure");
+const clouds = document.getElementById("clouds");
+const windDir = document.getElementById("windDir");
+const sunrise = document.getElementById("sunrise");
+const sunset = document.getElementById("sunset");
+
 const canvas = document.getElementById("chart");
 const ctx = canvas.getContext("2d");
 
-// CACHE
+// ================= CACHE =================
 const cache = {};
 
-// MAPA
+// ================= MAPA =================
 const map = L.map('map').setView([52.2297, 21.0122], 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -22,9 +31,20 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 let marker;
+
+// ================= RADAR =================
 let radarLayer;
 
-// ---------------- CACHE ----------------
+function addRadar(){
+  radarLayer = L.tileLayer(
+    "https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=" + apiKey,
+    { opacity: 0.6 }
+  );
+
+  radarLayer.addTo(map);
+}
+
+// ================= CACHE =================
 function getCache(key){
   if(cache[key] && Date.now() - cache[key].time < 60000){
     return cache[key].data;
@@ -36,25 +56,19 @@ function setCache(key, data){
   cache[key] = { data, time: Date.now() };
 }
 
-// ---------------- LOADING ----------------
-function showLoading(){
-  document.getElementById("loading").style.display = "block";
-}
-
-function hideLoading(){
-  document.getElementById("loading").style.display = "none";
-}
-
-// ---------------- MARKER ----------------
+// ================= MARKER =================
 function setMarker(lat, lon){
   if(marker) map.removeLayer(marker);
   marker = L.marker([lat, lon]).addTo(map);
 }
 
-// ---------------- GEO ----------------
+// ================= GEO =================
 async function getCityName(lat, lon){
   try{
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+    );
+
     const data = await res.json();
 
     return data.address.city ||
@@ -68,19 +82,47 @@ async function getCityName(lat, lon){
   }
 }
 
-// ---------------- RADAR ----------------
-function addRadar(){
-  if(radarLayer) map.removeLayer(radarLayer);
-
-  radarLayer = L.tileLayer(
-    "https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=" + apiKey,
-    { opacity: 0.6 }
-  );
-
-  radarLayer.addTo(map);
+// ================= WIND DIR =================
+function getWindDirection(deg){
+  if(deg > 337.5 || deg < 22.5) return "N";
+  if(deg < 67.5) return "NE";
+  if(deg < 112.5) return "E";
+  if(deg < 157.5) return "SE";
+  if(deg < 202.5) return "S";
+  if(deg < 247.5) return "SW";
+  if(deg < 292.5) return "W";
+  return "NW";
 }
 
-// ---------------- WEATHER FX ----------------
+// ================= TIME =================
+function formatTime(t){
+  return new Date(t * 1000).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+// ================= THEME + FX =================
+function changeTheme(type, temp){
+
+  const themes = {
+    Clouds: "https://cdn-icons-png.flaticon.com/512/414/414825.png",
+    Rain: "https://cdn-icons-png.flaticon.com/512/3351/3351979.png",
+    Clear: "https://cdn-icons-png.flaticon.com/512/869/869869.png",
+    Snow: "https://cdn-icons-png.flaticon.com/512/642/642102.png"
+  };
+
+  if(themes[type]) weatherIcon.src = themes[type];
+
+  document.body.style.filter =
+    temp > 30 ? "hue-rotate(30deg)" :
+    temp < 5 ? "hue-rotate(180deg)" :
+    "none";
+
+  setFX(type);
+}
+
+// ================= WEATHER FX =================
 function setFX(type){
 
   let fx = document.getElementById("fx");
@@ -97,30 +139,7 @@ function setFX(type){
   if(type === "Snow") fx.classList.add("snow");
 }
 
-// ---------------- THEME ----------------
-function changeTheme(type, temp){
-
-  const t = {
-    Clouds: "https://cdn-icons-png.flaticon.com/512/414/414825.png",
-    Rain: "https://cdn-icons-png.flaticon.com/512/3351/3351979.png",
-    Clear: "https://cdn-icons-png.flaticon.com/512/869/869869.png",
-    Snow: "https://cdn-icons-png.flaticon.com/512/642/642102.png"
-  };
-
-  if(t[type]) weatherIcon.src = t[type];
-
-  if(temp > 30){
-    document.body.style.filter = "hue-rotate(30deg)";
-  } else if(temp < 5){
-    document.body.style.filter = "hue-rotate(180deg)";
-  } else {
-    document.body.style.filter = "none";
-  }
-
-  setFX(type);
-}
-
-// ---------------- CHART ----------------
+// ================= CHART =================
 function drawChart(data){
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -142,7 +161,7 @@ function drawChart(data){
   ctx.stroke();
 }
 
-// ---------------- FORECAST ----------------
+// ================= FORECAST =================
 async function getForecast(lat, lon){
 
   const res = await fetch(
@@ -150,47 +169,11 @@ async function getForecast(lat, lon){
   );
 
   const data = await res.json();
+
   drawChart(data);
 }
 
-// ---------------- WEATHER CORE ----------------
-async function getWeatherByCoords(lat, lon){
-
-  const key = `${lat},${lon}`;
-  const cached = getCache(key);
-
-  if(cached){
-    updateUI(cached, lat, lon);
-    return;
-  }
-
-  showLoading();
-
-  try{
-
-    const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
-    );
-
-    const data = await res.json();
-
-    if(!res.ok || data.cod !== 200 || !data.main){
-      throw new Error("API error");
-    }
-
-    setCache(key, data);
-
-    updateUI(data, lat, lon);
-
-  } catch(e){
-    console.error(e);
-    showError();
-  }
-
-  hideLoading();
-}
-
-// ---------------- UI UPDATE ----------------
+// ================= UI UPDATE =================
 async function updateUI(data, lat, lon){
 
   const name = await getCityName(lat, lon);
@@ -201,21 +184,60 @@ async function updateUI(data, lat, lon){
   humidity.innerText = data.main.humidity + "%";
   wind.innerText = data.wind.speed + " km/h";
 
+  // EXTRA PRO DATA
+  feels.innerText = Math.round(data.main.feels_like) + "°C";
+  pressure.innerText = data.main.pressure + " hPa";
+  clouds.innerText = data.clouds.all + "%";
+  windDir.innerText = getWindDirection(data.wind.deg);
+  sunrise.innerText = formatTime(data.sys.sunrise);
+  sunset.innerText = formatTime(data.sys.sunset);
+
   changeTheme(data.weather[0].main, data.main.temp);
 
   getForecast(lat, lon);
 }
 
-// ---------------- ERROR ----------------
+// ================= ERROR =================
 function showError(){
   city.innerText = "Brak danych";
   temperature.innerText = "--°C";
   description.innerText = "Błąd API";
-  humidity.innerText = "--%";
-  wind.innerText = "-- km/h";
 }
 
-// ---------------- MAP CLICK ----------------
+// ================= WEATHER CORE =================
+async function getWeatherByCoords(lat, lon){
+
+  const key = `${lat},${lon}`;
+  const cached = getCache(key);
+
+  if(cached){
+    updateUI(cached, lat, lon);
+    return;
+  }
+
+  try{
+
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
+    );
+
+    const data = await res.json();
+
+    if(!res.ok || data.cod !== 200 || !data.main){
+      showError();
+      return;
+    }
+
+    setCache(key, data);
+
+    updateUI(data, lat, lon);
+
+  } catch{
+    showError();
+  }
+}
+
+// ================= MAP CLICK =================
 map.on("click", (e)=>{
 
   const lat = e.latlng.lat;
@@ -226,7 +248,7 @@ map.on("click", (e)=>{
 
 });
 
-// ---------------- GPS ----------------
+// ================= GPS =================
 function myLocation(){
 
   if(!navigator.geolocation) return;
@@ -245,6 +267,6 @@ function myLocation(){
 
 }
 
-// ---------------- START ----------------
+// ================= INIT =================
 addRadar();
 getWeatherByCoords(52.2297, 21.0122);
