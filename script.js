@@ -1,6 +1,6 @@
 const apiKey = "739098adcbab3596715447d628e4e1c9";
 
-// ================= UI =================
+// UI
 const city = document.getElementById("city");
 const temperature = document.getElementById("temperature");
 const description = document.getElementById("description");
@@ -8,7 +8,13 @@ const humidity = document.getElementById("humidity");
 const wind = document.getElementById("wind");
 const weatherIcon = document.getElementById("weatherIcon");
 
-// ================= MAPA =================
+const canvas = document.getElementById("chart");
+const ctx = canvas.getContext("2d");
+
+// CACHE
+const cache = {};
+
+// MAPA
 const map = L.map('map').setView([52.2297, 21.0122], 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -16,21 +22,39 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 let marker;
+let radarLayer;
 
-// ================= MARKER =================
+// ---------------- CACHE ----------------
+function getCache(key){
+  if(cache[key] && Date.now() - cache[key].time < 60000){
+    return cache[key].data;
+  }
+  return null;
+}
+
+function setCache(key, data){
+  cache[key] = { data, time: Date.now() };
+}
+
+// ---------------- LOADING ----------------
+function showLoading(){
+  document.getElementById("loading").style.display = "block";
+}
+
+function hideLoading(){
+  document.getElementById("loading").style.display = "none";
+}
+
+// ---------------- MARKER ----------------
 function setMarker(lat, lon){
   if(marker) map.removeLayer(marker);
   marker = L.marker([lat, lon]).addTo(map);
 }
 
-// ================= REVERSE GEO =================
+// ---------------- GEO ----------------
 async function getCityName(lat, lon){
-
   try{
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
-    );
-
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
     const data = await res.json();
 
     return data.address.city ||
@@ -39,97 +63,25 @@ async function getCityName(lat, lon){
            data.address.state ||
            data.display_name;
 
-  } catch{
+  } catch {
     return "Nieznana lokalizacja";
   }
 }
 
-// ================= POGODA (FIXED + PRO) =================
-async function getWeatherByCoords(lat, lon){
+// ---------------- RADAR ----------------
+function addRadar(){
+  if(radarLayer) map.removeLayer(radarLayer);
 
-  try{
+  radarLayer = L.tileLayer(
+    "https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=" + apiKey,
+    { opacity: 0.6 }
+  );
 
-    const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
-    );
-
-    const data = await res.json();
-
-    // ❗ FIX CRASH
-    if(!res.ok || !data || data.cod !== 200 || !data.main){
-      showError();
-      return;
-    }
-
-    const placeName = await getCityName(lat, lon);
-
-    city.innerText = placeName || "Nieznana lokalizacja";
-    temperature.innerText = Math.round(data.main.temp) + "°C";
-    description.innerText = data.weather[0].description;
-    humidity.innerText = data.main.humidity + "%";
-    wind.innerText = data.wind.speed + " km/h";
-
-    changeTheme(data.weather[0].main, data.main.temp);
-
-  } catch(err){
-    console.error(err);
-    showError();
-  }
+  radarLayer.addTo(map);
 }
 
-// ================= ERROR UI =================
-function showError(){
-  city.innerText = "Brak danych 🌍";
-  temperature.innerText = "--°C";
-  description.innerText = "Nie udało się pobrać pogody";
-  humidity.innerText = "--%";
-  wind.innerText = "-- km/h";
-}
-
-// ================= THEME + NASA MODE =================
-function changeTheme(type, temp){
-
-  const themes = {
-    Clouds: {
-      img: "https://cdn-icons-png.flaticon.com/512/414/414825.png",
-      bg: "linear-gradient(135deg,#4b5563,#111827)"
-    },
-    Rain: {
-      img: "https://cdn-icons-png.flaticon.com/512/3351/3351979.png",
-      bg: "linear-gradient(135deg,#1e3a8a,#0f172a)"
-    },
-    Clear: {
-      img: "https://cdn-icons-png.flaticon.com/512/869/869869.png",
-      bg: "linear-gradient(135deg,#f59e0b,#f97316)"
-    },
-    Snow: {
-      img: "https://cdn-icons-png.flaticon.com/512/642/642102.png",
-      bg: "linear-gradient(135deg,#cbd5e1,#64748b)"
-    }
-  };
-
-  const t = themes[type];
-
-  if(t){
-    weatherIcon.src = t.img;
-    document.body.style.background = t.bg;
-  }
-
-  // 🛰️ NASA MODE (efekt temperatury)
-  if(temp > 30){
-    document.body.style.filter = "hue-rotate(30deg) saturate(1.3)";
-  } else if(temp < 5){
-    document.body.style.filter = "hue-rotate(180deg)";
-  } else {
-    document.body.style.filter = "none";
-  }
-
-  // 🌧️ EFFECT OVERLAY
-  setWeatherFX(type);
-}
-
-// ================= WEATHER FX (RAIN / SNOW) =================
-function setWeatherFX(type){
+// ---------------- WEATHER FX ----------------
+function setFX(type){
 
   let fx = document.getElementById("fx");
 
@@ -141,16 +93,129 @@ function setWeatherFX(type){
 
   fx.className = "";
 
-  if(type === "Rain"){
-    fx.classList.add("rain");
-  }
-
-  if(type === "Snow"){
-    fx.classList.add("snow");
-  }
+  if(type === "Rain") fx.classList.add("rain");
+  if(type === "Snow") fx.classList.add("snow");
 }
 
-// ================= MAP CLICK =================
+// ---------------- THEME ----------------
+function changeTheme(type, temp){
+
+  const t = {
+    Clouds: "https://cdn-icons-png.flaticon.com/512/414/414825.png",
+    Rain: "https://cdn-icons-png.flaticon.com/512/3351/3351979.png",
+    Clear: "https://cdn-icons-png.flaticon.com/512/869/869869.png",
+    Snow: "https://cdn-icons-png.flaticon.com/512/642/642102.png"
+  };
+
+  if(t[type]) weatherIcon.src = t[type];
+
+  if(temp > 30){
+    document.body.style.filter = "hue-rotate(30deg)";
+  } else if(temp < 5){
+    document.body.style.filter = "hue-rotate(180deg)";
+  } else {
+    document.body.style.filter = "none";
+  }
+
+  setFX(type);
+}
+
+// ---------------- CHART ----------------
+function drawChart(data){
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const temps = data.list.slice(0,8).map(x => x.main.temp);
+  const step = canvas.width / temps.length;
+
+  ctx.beginPath();
+
+  temps.forEach((t,i)=>{
+    const x = i * step;
+    const y = 100 - (t * 3);
+
+    if(i === 0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  });
+
+  ctx.strokeStyle = "cyan";
+  ctx.stroke();
+}
+
+// ---------------- FORECAST ----------------
+async function getForecast(lat, lon){
+
+  const res = await fetch(
+    `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
+  );
+
+  const data = await res.json();
+  drawChart(data);
+}
+
+// ---------------- WEATHER CORE ----------------
+async function getWeatherByCoords(lat, lon){
+
+  const key = `${lat},${lon}`;
+  const cached = getCache(key);
+
+  if(cached){
+    updateUI(cached, lat, lon);
+    return;
+  }
+
+  showLoading();
+
+  try{
+
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
+    );
+
+    const data = await res.json();
+
+    if(!res.ok || data.cod !== 200 || !data.main){
+      throw new Error("API error");
+    }
+
+    setCache(key, data);
+
+    updateUI(data, lat, lon);
+
+  } catch(e){
+    console.error(e);
+    showError();
+  }
+
+  hideLoading();
+}
+
+// ---------------- UI UPDATE ----------------
+async function updateUI(data, lat, lon){
+
+  const name = await getCityName(lat, lon);
+
+  city.innerText = name;
+  temperature.innerText = Math.round(data.main.temp) + "°C";
+  description.innerText = data.weather[0].description;
+  humidity.innerText = data.main.humidity + "%";
+  wind.innerText = data.wind.speed + " km/h";
+
+  changeTheme(data.weather[0].main, data.main.temp);
+
+  getForecast(lat, lon);
+}
+
+// ---------------- ERROR ----------------
+function showError(){
+  city.innerText = "Brak danych";
+  temperature.innerText = "--°C";
+  description.innerText = "Błąd API";
+  humidity.innerText = "--%";
+  wind.innerText = "-- km/h";
+}
+
+// ---------------- MAP CLICK ----------------
 map.on("click", (e)=>{
 
   const lat = e.latlng.lat;
@@ -161,20 +226,17 @@ map.on("click", (e)=>{
 
 });
 
-// ================= GPS =================
+// ---------------- GPS ----------------
 function myLocation(){
 
-  if(!navigator.geolocation){
-    alert("Brak GPS w przeglądarce");
-    return;
-  }
+  if(!navigator.geolocation) return;
 
   navigator.geolocation.getCurrentPosition((pos)=>{
 
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
 
-    map.setView([lat, lon], 10);
+    map.flyTo([lat, lon], 10);
 
     setMarker(lat, lon);
     getWeatherByCoords(lat, lon);
@@ -183,34 +245,6 @@ function myLocation(){
 
 }
 
-// ================= SEARCH (opcjonalnie) =================
-async function searchCity(name){
-
-  try{
-
-    const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${name}&appid=${apiKey}&units=metric`
-    );
-
-    const data = await res.json();
-
-    if(data.cod !== 200){
-      showError();
-      return;
-    }
-
-    const lat = data.coord.lat;
-    const lon = data.coord.lon;
-
-    map.setView([lat, lon], 10);
-    setMarker(lat, lon);
-
-    getWeatherByCoords(lat, lon);
-
-  } catch{
-    showError();
-  }
-}
-
-// ================= START =================
+// ---------------- START ----------------
+addRadar();
 getWeatherByCoords(52.2297, 21.0122);
