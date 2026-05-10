@@ -1,61 +1,54 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Weather OS</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Weather GOD MODE</title>
 
-  <link rel="stylesheet" href="style.css"/>
-
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-<div class="app">
+<div class="ui">
 
-  <div class="topbar">
-    <button onclick="myLocation()">📍 GPS</button>
-    <button onclick="toggleRadar()">🌧️ Radar</button>
-    <button onclick="toggleFavorites()">⭐ Ulubione</button>
-  </div>
+  <div class="sidebar">
 
-  <div id="map"></div>
+    <h1 id="city">Weather OS</h1>
+    <img id="icon"/>
 
-  <div class="panel">
-
-    <h1 id="city">Kliknij na mapie</h1>
-
-    <div class="main">
-      <img id="weatherIcon" />
-      <div>
-        <h2 id="temperature">--°C</h2>
-        <p id="description">---</p>
-      </div>
-    </div>
+    <h2 id="temp">--°C</h2>
+    <p id="desc">Kliknij na mapie</p>
 
     <div class="grid">
-      <div>🌡️ <span id="feels"></span></div>
-      <div>🌫️ <span id="pressure"></span></div>
-      <div>☁️ <span id="clouds"></span></div>
-      <div>🧭 <span id="windDir"></span></div>
-      <div>🌅 <span id="sunrise"></span></div>
-      <div>🌇 <span id="sunset"></span></div>
+      <div>Feels: <span id="feels"></span></div>
+      <div>Pressure: <span id="pressure"></span></div>
+      <div>Clouds: <span id="clouds"></span></div>
+      <div>Wind: <span id="wind"></span></div>
+      <div>Sunrise: <span id="sunrise"></span></div>
+      <div>Sunset: <span id="sunset"></span></div>
     </div>
 
     <canvas id="chart"></canvas>
 
-    <div class="history" id="history"></div>
+    <div id="history"></div>
+
+    <button onclick="gps()">📍 GPS</button>
+    <button onclick="toggleRadar()">🌧️ Radar</button>
+    <button onclick="toggleAI()">🧠 AI Mode</button>
 
   </div>
+
+  <div id="map"></div>
 
 </div>
 
 <div id="fx"></div>
-<div id="loading">Ładowanie...</div>
+<div id="ai">AI MODE OFF</div>
+<div id="loading">LOADING...</div>
 
 <script src="script.js"></script>
 </body>
