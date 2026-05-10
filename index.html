@@ -3,58 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Weather Map App</title>
+  <title>Weather OS</title>
 
   <link rel="stylesheet" href="style.css"/>
 
-  <!-- Leaflet map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-  <div class="container">
+<div class="app">
 
-    <div id="map"></div>
+  <div class="topbar">
+    <button onclick="myLocation()">📍 GPS</button>
+    <button onclick="toggleRadar()">🌧️ Radar</button>
+    <button onclick="toggleFavorites()">⭐ Ulubione</button>
+  </div>
 
-    <div class="weather-box">
+  <div id="map"></div>
 
-      <h1 id="city">Kliknij na mapie</h1>
+  <div class="panel">
 
-      <img 
-        id="weatherIcon"
-        src="https://cdn-icons-png.flaticon.com/512/1163/1163661.png"
-        alt="weather"
-      >
+    <h1 id="city">Kliknij na mapie</h1>
 
-      <h2 id="temperature">--°C</h2>
-
-      <p id="description">Brak danych</p>
-
-      <div class="details">
-
-        <div class="detail">
-          <span>💧 Wilgotność</span>
-          <p id="humidity">--%</p>
-        </div>
-
-        <div class="detail">
-          <span>🌬 Wiatr</span>
-          <p id="wind">-- km/h</p>
-        </div>
-
+    <div class="main">
+      <img id="weatherIcon" />
+      <div>
+        <h2 id="temperature">--°C</h2>
+        <p id="description">---</p>
       </div>
-
     </div>
+
+    <div class="grid">
+      <div>🌡️ <span id="feels"></span></div>
+      <div>🌫️ <span id="pressure"></span></div>
+      <div>☁️ <span id="clouds"></span></div>
+      <div>🧭 <span id="windDir"></span></div>
+      <div>🌅 <span id="sunrise"></span></div>
+      <div>🌇 <span id="sunset"></span></div>
+    </div>
+
+    <canvas id="chart"></canvas>
+
+    <div class="history" id="history"></div>
 
   </div>
 
-  <div id="loading">Ładowanie...</div>
-<button onclick="myLocation()">📍 Moja lokalizacja</button>
+</div>
 
-<canvas id="chart" height="120"></canvas>
+<div id="fx"></div>
+<div id="loading">Ładowanie...</div>
 
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
