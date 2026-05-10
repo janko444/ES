@@ -1,1 +1,52 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather App</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
 
+  <div class="container">
+
+    <div class="search-box">
+      <input type="text" placeholder="Wpisz miasto..." id="cityInput">
+      <button id="searchBtn">Szukaj</button>
+    </div>
+
+    <div class="weather-box">
+
+      <h1 id="city">Warsaw</h1>
+
+      <img 
+        id="weatherIcon"
+        src="https://cdn-icons-png.flaticon.com/512/869/869869.png"
+        alt="weather"
+      >
+
+      <h2 id="temperature">18°C</h2>
+
+      <p id="description">Sunny</p>
+
+      <div class="details">
+
+        <div class="detail">
+          <span>💧 Wilgotność</span>
+          <p id="humidity">60%</p>
+        </div>
+
+        <div class="detail">
+          <span>🌬 Wiatr</span>
+          <p id="wind">12 km/h</p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
