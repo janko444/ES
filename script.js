@@ -1,4 +1,4 @@
-const apiKey = "TWOJ_API_KEY";
+const apiKey = "739098adcbab3596715447d628e4e1c9";
 
 // UI
 const city = document.getElementById("city");
